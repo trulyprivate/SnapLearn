@@ -43,15 +43,3 @@ SnapLearn is distributed under the MIT license.  See LICENCE.md: LICENCE.md for 
 
 SnapLearn is an educational tool, not a replacement for understanding. Ensure understanding and ethical use of this app in learning or solving assignment problems.
 
-**Additional Sections to Consider**
-
-Screenshots or a Demo Video
-Known Issues/Limitations (if any)
-Future Roadmap (exciting things you plan to add)
-
-**Tips**
-
-Use clear headings and formatting.
-Keep the language accessible to users of varying technical levels.
-Consider the search terms potential users might use to find your app.
-Let me know if you'd like adjustments or specific sections! This readme acts as a  foundation for your  exciting and innovative SnapLearn project! 👍
