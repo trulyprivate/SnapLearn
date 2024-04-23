@@ -26,7 +26,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -34,13 +33,13 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 
 @Composable
-fun CameraScreen() {
-    CameraContent()
+fun CameraScreen(context: Context, sharedPrefsManager: SharedPrefsManager) {
+    CameraContent(context = context, sharedPrefsManager = sharedPrefsManager)
 }
 
 @Composable
-private fun CameraContent() {
-    val context: Context = LocalContext.current
+private fun CameraContent(context: Context, // Add Context parameter
+                          sharedPrefsManager: SharedPrefsManager) {
     val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
     val cameraController: LifecycleCameraController = remember { LifecycleCameraController(context) }
     var detectedText: String by remember { mutableStateOf("No text detected yet..") }
@@ -98,9 +97,12 @@ private fun CameraContent() {
 
                 Button(
                     onClick = {
+                        val apiKey = sharedPrefsManager.getApiKey() ?: "" // Get apiKey from shared preferences
+                        sharedPrefsManager.storeApiKey(apiKey)
                         // Create an intent to start SecondActivity with detectedText as an extra
                         val intent = Intent(context, SecondActivity::class.java).apply {
                             putExtra("detectedTextKey", detectedText)
+                            putExtra("API_KEY", apiKey)
                         }
                         context.startActivity(intent)
                     },

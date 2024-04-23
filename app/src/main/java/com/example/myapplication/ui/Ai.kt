@@ -40,6 +40,7 @@ class SecondActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val detectedText = intent.getStringExtra("detectedTextKey") ?: "No text detected"
+        val apiKey = intent.getStringExtra("API_KEY") ?: "No API Key"
         setContent {
 
             MyApplicationTheme {
@@ -49,10 +50,11 @@ class SecondActivity : ComponentActivity() {
                 ) {
                     val generativeModel = GenerativeModel(
                             modelName = "gemini-pro",
-                            apiKey = BuildConfig.apiKey
+                            apiKey = apiKey
                     )
                     val viewModel = AnswerViewModel(generativeModel)
                     AnswerRoute(detectedText, viewModel)
+//                    Text(text = "API Key: $apiKey")
                 }
             }
         }
