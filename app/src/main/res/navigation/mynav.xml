@@ -1,11 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/mynav"
-    app:startDestination="@id/mainActivity2">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/MainScreen">
 
-    <activity
-        android:id="@+id/mainActivity2"
-        android:name="com.example.myapplication.MainActivity"
-        android:label="MainActivity" />
+    <fragment
+        android:id="@+id/MainScreen"
+        android:name="com.example.myapplication.ui.MainScreen"
+        android:label="Main Screen">
+        <action
+            android:id="@+id/camera_screen_action"
+            app:destination="@id/camera_screen"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/camera_screen"
+        android:name="com.example.myapplication.CameraScreen"
+        android:label="Camera Screen">
+    </fragment>
+
+    <!-- Define other destinations and actions as needed -->
+
 </navigation>

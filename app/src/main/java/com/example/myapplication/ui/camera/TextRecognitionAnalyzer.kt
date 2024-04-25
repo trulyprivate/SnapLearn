@@ -23,7 +23,7 @@ class TextRecognitionAnalyzer(
 ) : ImageAnalysis.Analyzer {
 
     companion object {
-        const val THROTTLE_TIMEOUT_MS = 1_000L
+        const val THROTTLE_TIMEOUT_MS = 1_00L
     }
 
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())

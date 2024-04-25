@@ -20,23 +20,20 @@ class MainActivity : ComponentActivity() {
             SharedPrefsManager(context = applicationContext) // Create an instance of SharedPrefsManager
 
         setContent {
-            val navController = rememberNavController() // Initialize NavController
+
+
             MyApplicationTheme {
                 Surface(
-                    modifier = Modifier.fillMaxSize(), // Fill the entire available space
+                    modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // NavHost for navigation
-                    NavHost(navController, startDestination = "main_screen_route") {
-                        composable("main_screen_route") {
-                            MainScreen(
-                                sharedPrefsManager = sharedPrefsManager,
-                                navController = navController
-                            )
-                        }
-                    }
+                    MainScreen(
+                        sharedPrefsManager = sharedPrefsManager
+                    )
                 }
             }
         }
+
+
     }
 }

@@ -1,5 +1,8 @@
 package com.example.myapplication
 
+import android.text.SpannedString
+import androidx.compose.ui.text.AnnotatedString
+
 /**
  * A sealed hierarchy describing the state of the text generation.
  */
@@ -19,13 +22,13 @@ sealed interface AnswerUiState {
      * Text has been generated
      */
     data class Success(
-            val outputText: String
+            val outputText: AnnotatedString
     ) : AnswerUiState
 
     /**
      * There was an error generating text
      */
     data class Error(
-            val errorMessage: String
+            val errorMessage: AnnotatedString
     ) : AnswerUiState
 }
