@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
+    id("kotlin-kapt")
 }
 // Set version numbers as extension properties
 val lifecycleVersion = "2.6.1"
@@ -114,4 +115,8 @@ dependencies {
     // Accompanist
     implementation("com.google.accompanist:accompanist-permissions:$accompanistVersion")
 
+    //Room
+    val roomVersion = "2.6.0"
+    implementation("androidx.room:room-ktx:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
 }
