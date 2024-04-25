@@ -3,4 +3,5 @@
     <string name="action_go">Solve</string>
     <string name="summarize_label">Edit, Then Click Go</string>
     <string name="summarize_hint">Type Any Question</string>
+    <string name="title_activity_history_screen">HistoryScreen</string>
 </resources>

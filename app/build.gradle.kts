@@ -8,7 +8,6 @@ val lifecycleVersion = "2.6.1"
 val cameraxVersion = "1.3.0-beta02"
 val accompanistVersion = "0.31.6-rc"
 val composeVersion = "2023.06.01"
-
 android {
     namespace = "com.example.myapplication"
     compileSdk = 34
@@ -114,8 +113,5 @@ dependencies {
 
     // Accompanist
     implementation("com.google.accompanist:accompanist-permissions:$accompanistVersion")
-
-    implementation("com.google.android.gms:play-services-mlkit-document-scanner:16.0.0-beta1")
-
 
 }
