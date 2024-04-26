@@ -103,14 +103,14 @@ fun QuestionAnswerList(questionsAndAnswers: List<QuestionAnswer>, modifier: Modi
 @Composable
 fun QuestionAnswerCard(questionAnswer: QuestionAnswer, modifier: Modifier = Modifier) {
     Surface(
-        modifier = modifier.padding(8.dp).fillMaxWidth().height(84.dp),
+        modifier = modifier.padding(8.dp).fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         color = MaterialTheme.colorScheme.surfaceVariant, // Use surface color
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = questionAnswer.question,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurface // Use onSurface color
             )
             Spacer(modifier = Modifier.height(8.dp))
