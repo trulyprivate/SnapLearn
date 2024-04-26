@@ -109,5 +109,15 @@ fun NoPermissionContent(
             Icon(imageVector = Icons.Default.Camera, contentDescription = "Camera")
             Text(text = "Grant permission")
         }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            modifier = Modifier.padding(20.dp),
+            textAlign = TextAlign.Center,
+            text = "Group 13 - SnapLearn, \n COST 32152, FOS, UOK | 2024",
+            style = TextStyle(
+                fontSize = 24.sp,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
+            )
+        )
     }
 }
