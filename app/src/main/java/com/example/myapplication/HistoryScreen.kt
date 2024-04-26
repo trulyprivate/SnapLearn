@@ -19,6 +19,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -94,15 +95,22 @@ fun QuestionAnswerList(questionsAndAnswers: List<QuestionAnswer>, modifier: Modi
 
 @Composable
 fun QuestionAnswerCard(questionAnswer: QuestionAnswer, modifier: Modifier = Modifier) {
-    Card(
+    Surface(
         modifier = modifier.padding(8.dp).fillMaxWidth().height(84.dp),
         shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        color = MaterialTheme.colorScheme.surfaceVariant, // Use surface color
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = questionAnswer.question, style = MaterialTheme.typography.labelMedium)
+            Text(
+                text = questionAnswer.question,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface // Use onSurface color
+            )
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = questionAnswer.answer)
+            Text(
+                text = questionAnswer.answer,
+                color = MaterialTheme.colorScheme.onSurface // Use onSurface color
+            )
         }
     }
 }
