@@ -32,6 +32,7 @@ import com.example.myapplication.data.ItemsDatabase
 import com.example.myapplication.presentation.ItemsViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
+
 // Define your data class here (replace with your actual data structure)
 data class QuestionAnswer(val question: String, val answer: String)
 
@@ -50,7 +51,7 @@ class HistoryScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-         val viewModel by viewModels<ItemsViewModel>(
+        val viewModel by viewModels<ItemsViewModel>(
             factoryProducer = {
                 object : ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -61,21 +62,27 @@ class HistoryScreen : ComponentActivity() {
         )
 
         // Replace with your actual data fetching logic (e.g., from ViewModel)
-         val questionsAndAnswers = viewModel.getQuestionsAndAnswers() // Assuming this function exists in ViewModel
+        val questionsAndAnswers =
+            viewModel.getQuestionsAndAnswers() // Assuming this function exists in ViewModel
         enableEdgeToEdge()
         setContent {
-            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                Box(modifier = Modifier.padding(innerPadding)) {
-                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                        item {
-                            Text(
-                                text = "History",
-                                style = MaterialTheme.typography.headlineSmall,
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-                        items(viewModel.getQuestionsAndAnswers()) { questionAnswer ->
-                            QuestionAnswerCard(questionAnswer)
+            MyApplicationTheme { // Wrap the content with MyApplicationTheme
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    Surface(
+                        modifier = Modifier.padding(innerPadding),
+                        color = MaterialTheme.colorScheme.surface // Use surface color
+                    ) {
+                        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                            item {
+                                Text(
+                                    text = "History",
+                                    style = MaterialTheme.typography.headlineLarge,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
+                            items(questionsAndAnswers) { questionAnswer ->
+                                QuestionAnswerCard(questionAnswer)
+                            }
                         }
                     }
                 }
@@ -121,8 +128,8 @@ fun QuestionAnswerListPreview() {
     MyApplicationTheme {
         // Provide some sample data for preview
         val questionsAndAnswers = listOf(
-            QuestionAnswer("What is Compose?", "A modern UI framework for Android"),
-            QuestionAnswer("What are previews?", "A way to see your composables in action")
+            QuestionAnswer("What is Mobile Computing?", "Mobile computing encompasses human-computer interaction where portable devices like smartphones and tablets are utilized for data processing and transmission, often wirelessly. This field integrates mobile communication, hardware, and software to facilitate on-the-go computing, enabling users to access, store, and manipulate information from any location."),
+            QuestionAnswer("What are the reasons behind the significant increase in the use of mobile devices durıng the past decade?", "The last decade has witnessed a surge in mobile device usage due to a confluence of factors. Firstly, advancements in hardware led to powerful, affordable smartphones with constant internet access. Secondly, the proliferation of mobile applications (apps) catering to diverse needs, from communication and entertainment to productivity and education, fueled user engagement. Finally, the expansion of wireless infrastructure ensured seamless connectivity, making mobile devices an indispensable tool for information access and interaction.")
         )
         QuestionAnswerList(questionsAndAnswers)
     }

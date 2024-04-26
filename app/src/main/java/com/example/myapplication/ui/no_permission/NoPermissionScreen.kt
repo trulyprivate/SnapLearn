@@ -48,7 +48,7 @@ fun NoPermissionScreen(
         }
     )
 }
-
+// Saving the API key
 @Composable
 private fun getSharedPrefsManager(): SharedPrefsManager {
     val context = LocalContext.current

@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import AnswerViewModel
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,12 +9,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CopyAll
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -74,6 +81,7 @@ fun AnswerScreen(
     uiState: AnswerUiState = AnswerUiState.Initial,
     onAnswerClicked: (String) -> Unit = {}
 ) {
+    val context = LocalContext.current
     var prompt by remember { mutableStateOf(initialText) } // Initialize prompt with initialText
     Column(
         modifier = Modifier
@@ -81,15 +89,41 @@ fun AnswerScreen(
             .verticalScroll(rememberScrollState())
     ) {
         val buttonHeight = 64.dp // Define the height of the button
-        TextField(
-            value = prompt,
-            label = { Text(stringResource(R.string.summarize_label)) },
-            placeholder = { Text(stringResource(R.string.summarize_hint)) },
-            onValueChange = { prompt = it },
+
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = buttonHeight)
-        )
+        ) {
+            TextField(
+                value = prompt,
+                label = { Text(stringResource(R.string.summarize_label)) },
+                placeholder = { Text(stringResource(R.string.summarize_hint)) },
+                onValueChange = { prompt = it },
+                modifier = Modifier
+                    .fillMaxSize() // Makes TextField fill the entire Box
+            )
+            IconButton(
+                onClick = {
+                    val intent = Intent(context, HistoryScreen::class.java).apply { }
+                    context.startActivity(intent)
+                },
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
+                ),
+                modifier = Modifier
+                    .align(Alignment.TopEnd) // Align to top-right corner
+                    .padding(end = 8.dp, top = 8.dp) // Add some padding for separation
+            ) {
+                Icon(
+                    Icons.Default.History,
+                    contentDescription = "History Icon"
+                )
+            }
+        }
+
+
         Spacer(modifier = Modifier.height(8.dp))
         Button(
             onClick = {
@@ -120,7 +154,7 @@ fun AnswerScreen(
                     .weight(1f)
             ) {
                 Icon(
-                    Icons.Default.Person,
+                    Icons.Default.CopyAll,
                     contentDescription = "Copy All Icon"
                 )
                 Text(
@@ -142,7 +176,7 @@ fun AnswerScreen(
                 )
             ) {
                 Icon(
-                    Icons.Default.Person,
+                    Icons.Default.PictureAsPdf,
                     contentDescription = "Make PDF Icon"
                 )
                 Text(
