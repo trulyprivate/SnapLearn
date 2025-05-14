@@ -1,0 +1,71 @@
+---
+description:  cross-platform code that will be used by both Android and iOS applications
+globs: 
+alwaysApply: false
+---
+# Shared Kotlin Code Guidelines
+
+The shared module contains cross-platform code that will be used by both Android and iOS applications.
+
+## Package Structure
+
+- `com.example.snaplearn.models` - Data models and entities
+- `com.example.snaplearn.repository` - Data access layer and repositories
+- `com.example.snaplearn.network` - API clients and network utilities
+- `com.example.snaplearn.viewmodel` - Platform-agnostic view models
+- `com.example.snaplearn.util` - Common utilities and extensions
+
+## Platform-Specific Code
+
+Use the `expect/actual` pattern for platform-specific implementations:
+
+```kotlin
+// In commonMain
+expect class PlatformInfo {
+    val name: String
+}
+
+// In androidMain
+actual class PlatformInfo {
+    actual val name: String = "Android ${Build.VERSION.SDK_INT}"
+}
+
+// In iosMain
+actual class PlatformInfo {
+    actual val name: String = UIDevice.currentDevice.systemName()
+}
+```
+
+## Dependency Injection
+
+Use Koin for dependency injection across platforms:
+
+```kotlin
+// In commonMain
+val commonModule = module {
+    single { Repository(get()) }
+}
+
+// In androidMain
+val androidModule = module {
+    single { AndroidDatabaseDriver() }
+}
+
+// In iosMain
+val iosModule = module {
+    single { IOSDatabaseDriver() }
+}
+```
+
+## Coroutines and Flows
+
+Use Kotlin Coroutines and Flow for asynchronous programming:
+
+```kotlin
+class Repository {
+    suspend fun getData(): List<Item> { /* ... */ }
+    fun observeData(): Flow<List<Item>> { /* ... */ }
+}
+```
+
+For iOS, annotate Flow-returning functions with `@NativeCoroutines` or use SKIE.

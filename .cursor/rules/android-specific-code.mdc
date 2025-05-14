@@ -1,0 +1,62 @@
+---
+description: Android-specific code
+globs: 
+alwaysApply: false
+---
+# Android-Specific Code Guidelines
+
+This document describes patterns and conventions for Android-specific code in the SnapLearn project.
+
+## Directory Structure
+
+Android-specific code is split between two locations:
+- `shared/src/androidMain/` - Platform-specific implementations of shared interfaces
+- `androidApp/src/main/` - Android UI and platform integrations
+
+## Android UI Components
+
+Use Jetpack Compose for UI implementation:
+
+```kotlin
+@Composable
+fun CameraScreen(viewModel: CameraViewModel = viewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    // UI implementation
+}
+```
+
+## ViewModels
+
+Android ViewModels should consume the shared ViewModels:
+
+```kotlin
+class CameraViewModel(
+    private val sharedViewModel: SharedCameraViewModel,
+    // Other dependencies
+) : ViewModel() {
+    val uiState = sharedViewModel.state
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), CameraUiState.Initial)
+    
+    // Android-specific ViewModel logic
+}
+```
+
+## Platform-Specific Implementations
+
+Implement shared interfaces for Android:
+
+```kotlin
+// In shared/src/androidMain/
+actual class DatabaseDriver actual constructor() {
+    actual fun connect(): Database {
+        return AndroidSQLiteDriver(Database.Schema, "database.db")
+    }
+}
+```
+
+## Resource Handling
+
+Android resources should be placed in their standard locations:
+- `androidApp/src/main/res/` - Android resources
+- `androidApp/src/main/AndroidManifest.xml` - Android manifest

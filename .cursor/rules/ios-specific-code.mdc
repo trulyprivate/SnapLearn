@@ -1,0 +1,91 @@
+---
+description: patterns and conventions for iOS-specific code
+globs: 
+alwaysApply: false
+---
+# iOS-Specific Code Guidelines
+
+This document describes patterns and conventions for iOS-specific code in the SnapLearn project.
+
+## Directory Structure
+
+iOS-specific code is split between two locations:
+- `shared/src/iosMain/` - Kotlin implementations of shared interfaces for iOS
+- `iosApp/` - Swift UI and platform integrations
+
+## Swift UI Components
+
+Use SwiftUI for UI implementation:
+
+```swift
+struct CameraView: View {
+    @ObservedObject private(set) var viewModel: CameraViewModel
+    
+    var body: some View {
+        ZStack {
+            // Camera preview
+            CameraPreviewView()
+            
+            // Controls
+            VStack {
+                // UI elements
+            }
+        }
+        .task {
+            await viewModel.startCamera()
+        }
+    }
+}
+```
+
+## ViewModels
+
+Swift ViewModels should interact with shared Kotlin ViewModels:
+
+```swift
+@MainActor
+class CameraViewModel: ObservableObject {
+    @Published var recognizedText: String = ""
+    private let sharedViewModel: SharedCameraViewModel
+    
+    init(sharedViewModel: SharedCameraViewModel) {
+        self.sharedViewModel = sharedViewModel
+    }
+    
+    func startCamera() async {
+        for await text in sharedViewModel.recognizedTextFlow {
+            self.recognizedText = text
+        }
+    }
+}
+```
+
+## Kotlin-Swift Interoperability
+
+For Kotlin Flow consumption in Swift, use SKIE:
+
+```swift
+// When using SKIE, Flows are automatically converted to AsyncSequence
+for await item in repository.observeItems() {
+    // Process item
+}
+```
+
+## Platform-Specific Implementations
+
+Implement shared interfaces for iOS in Kotlin:
+
+```kotlin
+// In shared/src/iosMain/
+actual class DatabaseDriver actual constructor() {
+    actual fun connect(): Database {
+        return NativeSqliteDriver(Database.Schema, "database.db")
+    }
+}
+```
+
+## Resource Handling
+
+iOS resources should be placed in their standard locations:
+- `iosApp/iosApp/Assets.xcassets/` - iOS assets
+- `iosApp/iosApp/Info.plist` - iOS app information

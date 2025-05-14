@@ -1,0 +1,131 @@
+---
+description: test files
+globs: 
+alwaysApply: false
+---
+# Testing Guidelines
+
+This document describes patterns and conventions for test files in the SnapLearn project, following TDD principles.
+
+## Test Directory Structure
+
+- `shared/src/commonTest/` - Platform-agnostic tests
+- `shared/src/androidTest/` - Android-specific shared module tests
+- `shared/src/iosTest/` - iOS-specific shared module tests
+- `androidApp/src/test/` - Android unit tests
+- `androidApp/src/androidTest/` - Android instrumented tests
+- `iosApp/iosAppTests/` - iOS unit and UI tests
+
+## Common Test Patterns
+
+### Unit Tests in Kotlin
+
+Use the Kotlin test framework for common tests:
+
+```kotlin
+// In shared/src/commonTest/
+class RepositoryTest {
+    @Test
+    fun testGetItems() = runTest {
+        val repository = Repository(mockDataSource)
+        val items = repository.getItems()
+        
+        assertEquals(3, items.size)
+        assertEquals("Item 1", items[0].name)
+    }
+}
+```
+
+### Android Unit Tests
+
+Use JUnit 4 or 5 for Android unit tests:
+
+```kotlin
+// In androidApp/src/test/
+@RunWith(AndroidJUnit4::class)
+class AndroidViewModelTest {
+    @Test
+    fun testViewModelState() = runTest {
+        val viewModel = CameraViewModel(mockSharedViewModel)
+        
+        assertEquals(CameraUiState.Initial, viewModel.uiState.value)
+        
+        viewModel.processText("Test")
+        assertEquals("Test", viewModel.uiState.value.recognizedText)
+    }
+}
+```
+
+### iOS Unit Tests
+
+Use XCTest for iOS tests:
+
+```swift
+// In iosApp/iosAppTests/
+class ViewModelTests: XCTestCase {
+    func testViewModelState() async {
+        let viewModel = CameraViewModel(sharedViewModel: mockSharedViewModel)
+        
+        XCTAssertEqual("", viewModel.recognizedText)
+        
+        await viewModel.processText("Test")
+        XCTAssertEqual("Test", viewModel.recognizedText)
+    }
+}
+```
+
+## Test-Driven Development Workflow
+
+Follow these steps when developing new features:
+
+1. Write test first for the feature:
+
+```kotlin
+@Test
+fun testRecognizeText() = runTest {
+    val textRecognizer = TextRecognizer(mockEngine)
+    val result = textRecognizer.recognize(testImage)
+    
+    assertTrue(result.isSuccess)
+    assertEquals("Expected Text", result.getOrNull())
+}
+```
+
+2. Implement minimal code to make the test pass:
+
+```kotlin
+class TextRecognizer(private val engine: RecognitionEngine) {
+    suspend fun recognize(image: ByteArray): Result<String> {
+        return try {
+            val text = engine.processImage(image)
+            Result.success(text)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}
+```
+
+3. Refactor while keeping tests passing
+
+## Mock Objects
+
+Use MockK for Kotlin mocks:
+
+```kotlin
+// In shared/src/commonTest/
+@Test
+fun testWithMocks() = runTest {
+    val mockApi = mockk<Api>()
+    
+    coEvery { mockApi.fetchData() } returns listOf(testItem)
+    
+    val repository = Repository(mockApi)
+    val result = repository.getData()
+    
+    assertEquals(1, result.size)
+    coVerify { mockApi.fetchData() }
+}
+```
+
+For iOS tests, use the Swift mocking facilities or create test doubles.

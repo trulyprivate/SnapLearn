@@ -1,0 +1,185 @@
+---
+description: AI integration
+globs: 
+alwaysApply: false
+---
+# AI Integration Guidelines
+
+This document describes patterns and conventions for implementing AI integration with Google's Gemini API in the SnapLearn project.
+
+## Common Interface
+
+Define a common interface in the shared module:
+
+```kotlin
+// In shared/src/commonMain/
+interface AIService {
+    suspend fun generateAnswer(prompt: String): Result<String>
+    
+    fun generateAnswerStream(prompt: String): Flow<String>
+}
+```
+
+## API Key Management
+
+Securely store API keys with platform-specific implementations:
+
+```kotlin
+// In shared/src/commonMain/
+expect class SecureStorage {
+    suspend fun storeApiKey(key: String)
+    suspend fun getApiKey(): String?
+}
+
+// In shared/src/androidMain/
+actual class SecureStorage {
+    private val encryptedPreferences: EncryptedSharedPreferences = // ...
+    
+    actual suspend fun storeApiKey(key: String) {
+        encryptedPreferences.edit().putString("gemini_api_key", key).apply()
+    }
+    
+    actual suspend fun getApiKey(): String? {
+        return encryptedPreferences.getString("gemini_api_key", null)
+    }
+}
+
+// In shared/src/iosMain/
+actual class SecureStorage {
+    private val keychain = KeychainSwift()
+    
+    actual suspend fun storeApiKey(key: String) {
+        keychain.set(key, forKey: "gemini_api_key")
+    }
+    
+    actual suspend fun getApiKey(): String? {
+        return keychain.get("gemini_api_key")
+    }
+}
+```
+
+## Gemini API Client
+
+Implement the AI service using Gemini API:
+
+```kotlin
+// In shared/src/commonMain/
+class GeminiService(
+    private val secureStorage: SecureStorage,
+    private val httpClient: HttpClient
+) : AIService {
+    override suspend fun generateAnswer(prompt: String): Result<String> {
+        return try {
+            val apiKey = secureStorage.getApiKey() ?: throw IllegalStateException("API key not found")
+            val response = httpClient.post("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent") {
+                contentType(ContentType.Application.Json)
+                setBody(GenerateContentRequest(prompt))
+                parameter("key", apiKey)
+            }
+            val result = response.body<GenerateContentResponse>()
+            Result.success(result.candidates.first().content.parts.first().text)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    override fun generateAnswerStream(prompt: String): Flow<String> = flow {
+        val apiKey = secureStorage.getApiKey() ?: throw IllegalStateException("API key not found")
+        httpClient.preparePost("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:streamGenerateContent") {
+            contentType(ContentType.Application.Json)
+            setBody(GenerateContentRequest(prompt))
+            parameter("key", apiKey)
+        }.execute { response ->
+            val channel = response.bodyAsChannel()
+            while (!channel.isClosedForRead) {
+                val line = channel.readUTF8Line() ?: break
+                if (line.isNotBlank() && line.startsWith("data:")) {
+                    val jsonData = line.removePrefix("data:").trim()
+                    if (jsonData != "[DONE]") {
+                        val streamResponse = Json.decodeFromString<StreamResponse>(jsonData)
+                        val text = streamResponse.text
+                        if (text.isNotBlank()) {
+                            emit(text)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+## Response Processing
+
+Implement common response processing:
+
+```kotlin
+// In shared/src/commonMain/
+class ResponseFormatter {
+    fun formatResponse(text: String): AnnotatedString {
+        return buildAnnotatedString {
+            // Common formatting logic for both platforms
+        }
+    }
+}
+```
+
+## Platform-Specific ViewModels
+
+### Android ViewModel
+
+```kotlin
+// In androidApp/
+class AnswerViewModel(
+    private val aiService: AIService,
+    private val formatter: ResponseFormatter
+) : ViewModel() {
+    private val _uiState = MutableStateFlow<AnswerUiState>(AnswerUiState.Initial)
+    val uiState: StateFlow<AnswerUiState> = _uiState.asStateFlow()
+    
+    fun generateAnswer(input: String) {
+        viewModelScope.launch {
+            _uiState.value = AnswerUiState.Loading
+            
+            aiService.generateAnswerStream(input)
+                .catch { e -> 
+                    _uiState.value = AnswerUiState.Error(e.message ?: "Unknown error")
+                }
+                .collect { partialResponse ->
+                    val formatted = formatter.formatResponse(partialResponse)
+                    _uiState.value = AnswerUiState.Success(formatted)
+                }
+        }
+    }
+}
+```
+
+### iOS ViewModel
+
+```swift
+// In iosApp/
+@MainActor
+class AnswerViewModel: ObservableObject {
+    @Published var state: AnswerState = .initial
+    private let aiService: AIService
+    private let formatter: ResponseFormatter
+    
+    init(aiService: AIService, formatter: ResponseFormatter) {
+        self.aiService = aiService
+        self.formatter = formatter
+    }
+    
+    func generateAnswer(input: String) async {
+        state = .loading
+        
+        do {
+            for try await partialResponse in aiService.generateAnswerStream(prompt: input) {
+                let formatted = formatter.formatResponse(text: partialResponse)
+                state = .success(formatted)
+            }
+        } catch {
+            state = .error(error.localizedDescription)
+        }
+    }
+}
+```

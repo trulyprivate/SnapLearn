@@ -1,0 +1,135 @@
+---
+description: Common Interface
+globs: 
+alwaysApply: false
+---
+# Text Recognition Guidelines
+
+This document describes patterns and conventions for implementing text recognition in the SnapLearn project.
+
+## Common Interface
+
+Define a common interface in the shared module:
+
+```kotlin
+// In shared/src/commonMain/
+interface TextRecognizer {
+    suspend fun recognizeText(imageBytes: ByteArray): Result<String>
+    
+    fun createAnalyzer(onTextRecognized: (String) -> Unit): Any
+}
+```
+
+## Android Implementation
+
+Implement the text recognizer using ML Kit:
+
+```kotlin
+// In shared/src/androidMain/
+actual class TextRecognizerImpl : TextRecognizer {
+    private val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+
+    actual override suspend fun recognizeText(imageBytes: ByteArray): Result<String> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val image = InputImage.fromByteArray(
+                    imageBytes,
+                    /* metadata */ ...
+                )
+                val result = suspendCancellableCoroutine { continuation ->
+                    textRecognizer.process(image)
+                        .addOnSuccessListener { visionText ->
+                            continuation.resume(visionText.text)
+                        }
+                        .addOnFailureListener { exception ->
+                            continuation.resumeWithException(exception)
+                        }
+                }
+                Result.success(result)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+    
+    actual override fun createAnalyzer(onTextRecognized: (String) -> Unit): Any {
+        return TextRecognitionAnalyzer(onTextRecognized)
+    }
+}
+
+class TextRecognitionAnalyzer(
+    private val onTextRecognized: (String) -> Unit
+) : ImageAnalysis.Analyzer {
+    @OptIn(ExperimentalGetImage::class)
+    override fun analyze(imageProxy: ImageProxy) {
+        // ML Kit implementation
+    }
+}
+```
+
+## iOS Implementation
+
+Implement the text recognizer using Vision framework:
+
+```kotlin
+// In shared/src/iosMain/
+actual class TextRecognizerImpl : TextRecognizer {
+    actual override suspend fun recognizeText(imageBytes: ByteArray): Result<String> {
+        return try {
+            val nsData = imageBytes.toNSData()
+            val uiImage = UIImage(data = nsData)
+            val result = recognizeTextInImage(uiImage)
+            Result.success(result)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    actual override fun createAnalyzer(onTextRecognized: (String) -> Unit): Any {
+        return TextRecognitionAnalyzerIos(onTextRecognized)
+    }
+    
+    private fun recognizeTextInImage(image: UIImage?): String {
+        // Vision framework implementation
+    }
+}
+
+class TextRecognitionAnalyzerIos(
+    private val onTextRecognized: (String) -> Unit
+) {
+    // Implementation using VisionKit
+}
+```
+
+## Usage in Platform-Specific UI
+
+### Android UI
+
+```kotlin
+// In androidApp/
+val cameraController = LifecycleCameraController(context)
+val textRecognizer = getKoin().get<TextRecognizer>()
+
+val analyzer = textRecognizer.createAnalyzer { recognizedText ->
+    viewModel.processRecognizedText(recognizedText)
+}
+
+cameraController.setImageAnalysisAnalyzer(
+    ContextCompat.getMainExecutor(context),
+    analyzer as ImageAnalysis.Analyzer
+)
+```
+
+### iOS UI
+
+```swift
+// In iosApp/
+func setupCamera() {
+    let textRecognizer = KoinHelper().getTextRecognizer()
+    let analyzer = textRecognizer.createAnalyzer { recognizedText in
+        viewModel.processRecognizedText(recognizedText)
+    }
+    
+    // Set up AVCaptureSession with analyzer
+}
+```
