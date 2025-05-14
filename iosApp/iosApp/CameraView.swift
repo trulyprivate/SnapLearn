@@ -3,83 +3,83 @@ import shared
 
 struct CameraView: View {
     @State private var recognizedText = ""
+    @State private var isShowingAnswer = false
     
     var body: some View {
         NavigationView {
-            VStack {
-                // Placeholder for camera preview
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .overlay(
-                        VStack {
-                            Image(systemName: "camera.fill")
-                                .font(.system(size: 72))
-                                .foregroundColor(.gray)
-                            Text("Camera Preview")
-                                .foregroundColor(.gray)
-                                .padding()
-                        }
-                    )
+            ZStack {
+                // Camera view controller
+                CameraViewControllerRepresentable(recognizedText: $recognizedText)
+                    .edgesIgnoringSafeArea(.all)
                 
-                // Recognized text area
+                // Only show the button when text is recognized
                 if !recognizedText.isEmpty {
-                    VStack(alignment: .leading) {
-                        Text("Recognized Text:")
-                            .font(.headline)
+                    VStack {
+                        Spacer()
+                        
+                        // Recognized text display
                         Text(recognizedText)
                             .padding()
-                            .background(Color.gray.opacity(0.1))
-                            .cornerRadius(8)
-                    }
-                    .padding()
-                    
-                    // Button to process the recognized text
-                    NavigationLink(destination: AnswerView(initialQuestion: recognizedText)) {
-                        Text("Generate Answer")
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 12)
-                            .background(Color.blue)
+                            .background(Color.black.opacity(0.7))
                             .foregroundColor(.white)
                             .cornerRadius(8)
-                    }
-                    .padding(.bottom)
-                }
-                
-                // Camera controls
-                HStack(spacing: 50) {
-                    Button(action: {
-                        // Toggle flash
-                    }) {
-                        Image(systemName: "bolt.fill")
-                            .font(.system(size: 24))
-                    }
-                    
-                    // Shutter button
-                    Button(action: {
-                        // Placeholder: Set some recognized text
-                        recognizedText = "What is the capital of France?"
-                    }) {
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 70, height: 70)
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.black, lineWidth: 2)
-                                    .frame(width: 60, height: 60)
-                            )
-                    }
-                    
-                    Button(action: {
-                        // Toggle camera
-                    }) {
-                        Image(systemName: "arrow.triangle.2.circlepath.camera")
-                            .font(.system(size: 24))
+                            .padding()
+                        
+                        // Button to process the recognized text
+                        Button(action: {
+                            isShowingAnswer = true
+                        }) {
+                            Text("Generate Answer")
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 12)
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                        }
+                        .padding(.bottom, 80)
                     }
                 }
-                .padding(.bottom, 30)
             }
             .navigationTitle("Scan Text")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .sheet(isPresented: $isShowingAnswer) {
+            if !recognizedText.isEmpty {
+                AnswerView(initialQuestion: recognizedText)
+            }
+        }
+    }
+}
+
+// UIViewControllerRepresentable to wrap our CameraViewController
+struct CameraViewControllerRepresentable: UIViewControllerRepresentable {
+    @Binding var recognizedText: String
+    
+    func makeUIViewController(context: Context) -> CameraViewController {
+        let controller = CameraViewController()
+        controller.delegate = context.coordinator
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: CameraViewController, context: Context) {
+        // No updates needed here
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    // Coordinator to handle delegate callbacks
+    class Coordinator: NSObject, CameraViewControllerDelegate {
+        var parent: CameraViewControllerRepresentable
+        
+        init(_ parent: CameraViewControllerRepresentable) {
+            self.parent = parent
+        }
+        
+        // Implement delegate method
+        func didRecognizeText(_ text: String) {
+            parent.recognizedText = text
         }
     }
 } 
