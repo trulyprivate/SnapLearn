@@ -10,11 +10,11 @@ val cameraxVersion = "1.3.0-beta02"
 val accompanistVersion = "0.31.6-rc"
 val composeVersion = "2023.06.01"
 android {
-    namespace = "com.example.myapplication"
+    namespace = "com.example.snaplearn"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.myapplication"
+        applicationId = "com.example.snaplearn"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -55,7 +55,8 @@ android {
 }
 
 dependencies {
-
+    // Shared module
+    implementation(project(":shared"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -115,9 +116,6 @@ dependencies {
     // Accompanist
     implementation("com.google.accompanist:accompanist-permissions:$accompanistVersion")
 
-    // Room
-    val roomVersion = "2.6.0"
-    implementation("androidx.room:room-ktx:$roomVersion")
-    kapt("androidx.room:room-compiler:$roomVersion")
-
+    // Koin
+    implementation(libs.koin.android)
 }
