@@ -1,0 +1,6 @@
+-- Import required statements to correctly handle custom types
+import kotlin.Boolean;
+
+-- Enable foreign keys in SQLite
+-- This enables referential integrity
+PRAGMA foreign_keys = 1; 

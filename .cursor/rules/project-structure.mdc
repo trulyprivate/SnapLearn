@@ -1,0 +1,38 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# SnapLearn Project Structure
+
+This project follows a Kotlin Multiplatform Mobile (KMM) structure to share code between Android and iOS platforms.
+
+## Directory Structure
+
+- `shared/` - Contains shared Kotlin code used across platforms
+  - `src/commonMain/` - Platform-agnostic code
+  - `src/androidMain/` - Android-specific implementations
+  - `src/iosMain/` - iOS-specific implementations 
+  - `src/commonTest/` - Tests for shared code
+
+- `androidApp/` - Android application module
+  - `src/main/` - Android-specific code
+  - `src/test/` - Android unit tests
+  - `src/androidTest/` - Android instrumented tests
+
+- `iosApp/` - iOS application project
+  - `iosApp/` - Swift application code
+  - `iosAppTests/` - iOS unit and UI tests
+
+## Module Dependencies
+
+- `shared` module is included in both Android and iOS applications
+- `androidApp` depends on `shared`
+- `iosApp` includes `shared` as a framework
+
+## Code Organization Principles
+
+1. Maximize code sharing in `commonMain`
+2. Use expect/actual declarations for platform-specific implementations
+3. Keep UI implementations separate for each platform
+4. Share models, repositories, and business logic

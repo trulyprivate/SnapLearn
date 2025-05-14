@@ -1,0 +1,27 @@
+CREATE TABLE QuestionAnswers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    dateTime INTEGER NOT NULL
+);
+
+-- Get all question-answer pairs sorted by dateTime (most recent first)
+getAllQuestionAnswers:
+SELECT * FROM QuestionAnswers ORDER BY dateTime DESC;
+
+-- Get a specific question-answer pair by ID
+getQuestionAnswerById:
+SELECT * FROM QuestionAnswers WHERE id = ?;
+
+-- Insert a new question-answer pair
+insertQuestionAnswer:
+INSERT INTO QuestionAnswers(question, answer, dateTime)
+VALUES (?, ?, ?);
+
+-- Delete a question-answer pair by ID
+deleteQuestionAnswer:
+DELETE FROM QuestionAnswers WHERE id = ?;
+
+-- Delete all question-answer pairs
+deleteAllQuestionAnswers:
+DELETE FROM QuestionAnswers; 

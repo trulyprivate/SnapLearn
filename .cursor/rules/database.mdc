@@ -1,0 +1,185 @@
+---
+description: database
+globs: 
+alwaysApply: false
+---
+# Database Guidelines
+
+This document describes patterns and conventions for database access in the SnapLearn project.
+
+## SQLDelight Schema
+
+Define the database schema using SQLDelight:
+
+```sqldelight
+-- In shared/src/commonMain/sqldelight/com/example/snaplearn/database/QuestionAnswer.sq
+
+CREATE TABLE QuestionAnswer (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    timestamp INTEGER NOT NULL
+);
+
+getAll:
+SELECT * FROM QuestionAnswer ORDER BY timestamp DESC;
+
+getById:
+SELECT * FROM QuestionAnswer WHERE id = ?;
+
+insert:
+INSERT INTO QuestionAnswer(question, answer, timestamp) VALUES (?, ?, ?);
+
+deleteById:
+DELETE FROM QuestionAnswer WHERE id = ?;
+
+search:
+SELECT * FROM QuestionAnswer WHERE question LIKE '%' || ? || '%' OR answer LIKE '%' || ? || '%' ORDER BY timestamp DESC;
+```
+
+## Database Driver Factory
+
+Create platform-specific database drivers:
+
+```kotlin
+// In shared/src/commonMain/
+expect class DatabaseDriverFactory {
+    fun createDriver(): SqlDriver
+}
+
+// In shared/src/androidMain/
+actual class DatabaseDriverFactory(private val context: Context) {
+    actual fun createDriver(): SqlDriver {
+        return AndroidSqliteDriver(
+            schema = Database.Schema,
+            context = context,
+            name = "snaplearn.db"
+        )
+    }
+}
+
+// In shared/src/iosMain/
+actual class DatabaseDriverFactory {
+    actual fun createDriver(): SqlDriver {
+        return NativeSqliteDriver(
+            schema = Database.Schema,
+            name = "snaplearn.db"
+        )
+    }
+}
+```
+
+## Repository Pattern
+
+Implement the repository pattern for database access:
+
+```kotlin
+// In shared/src/commonMain/
+class HistoryRepository(databaseDriverFactory: DatabaseDriverFactory) {
+    private val database = Database(databaseDriverFactory.createDriver())
+    private val dbQuery = database.questionAnswerQueries
+    
+    fun getAllQuestionAnswers(): Flow<List<QuestionAnswer>> {
+        return dbQuery.getAll().asFlow().mapToList()
+    }
+    
+    suspend fun getQuestionAnswerById(id: Long): QuestionAnswer? {
+        return dbQuery.getById(id).executeAsOneOrNull()?.toQuestionAnswer()
+    }
+    
+    suspend fun saveQuestionAnswer(question: String, answer: String) {
+        dbQuery.insert(
+            question = question,
+            answer = answer,
+            timestamp = Clock.System.now().toEpochMilliseconds()
+        )
+    }
+    
+    suspend fun deleteQuestionAnswer(id: Long) {
+        dbQuery.deleteById(id)
+    }
+    
+    fun searchQuestionAnswers(query: String): Flow<List<QuestionAnswer>> {
+        return dbQuery.search(query, query).asFlow().mapToList()
+    }
+    
+    private fun QuestionAnswerEntity.toQuestionAnswer(): QuestionAnswer {
+        return QuestionAnswer(
+            id = id,
+            question = question,
+            answer = answer,
+            timestamp = timestamp
+        )
+    }
+}
+```
+
+## Usage in Platform-Specific UI
+
+### Android UI
+
+```kotlin
+// In androidApp/
+class HistoryViewModel(
+    private val historyRepository: HistoryRepository
+) : ViewModel() {
+    val history = historyRepository.getAllQuestionAnswers()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+    
+    fun deleteItem(id: Long) {
+        viewModelScope.launch {
+            historyRepository.deleteQuestionAnswer(id)
+        }
+    }
+}
+```
+
+### iOS UI
+
+```swift
+// In iosApp/
+@MainActor
+class HistoryViewModel: ObservableObject {
+    @Published var history: [QuestionAnswer] = []
+    private let historyRepository: HistoryRepository
+    
+    init(historyRepository: HistoryRepository) {
+        self.historyRepository = historyRepository
+        Task {
+            await observeHistory()
+        }
+    }
+    
+    func observeHistory() async {
+        do {
+            for await items in historyRepository.getAllQuestionAnswers() {
+                self.history = items
+            }
+        } catch {
+            print("Error observing history: \(error)")
+        }
+    }
+    
+    func deleteItem(id: Int64) {
+        Task {
+            do {
+                try await historyRepository.deleteQuestionAnswer(id: id)
+            } catch {
+                print("Error deleting item: \(error)")
+            }
+        }
+    }
+}
+```
+
+## Dependency Injection
+
+Register database components with Koin:
+
+```kotlin
+// In shared/src/commonMain/
+val databaseModule = module {
+    single { DatabaseDriverFactory(get()) }
+    single { HistoryRepository(get()) }
+}
+```

@@ -1,0 +1,57 @@
+-- Question and answer table
+CREATE TABLE QuestionAnswer (
+    id TEXT NOT NULL PRIMARY KEY,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    imageData BLOB,
+    createdAt INTEGER NOT NULL,
+    favorited INTEGER AS Boolean DEFAULT 0 NOT NULL
+);
+
+-- Get all question/answer pairs ordered by creation date (most recent first)
+selectAll:
+SELECT *
+FROM QuestionAnswer
+ORDER BY createdAt DESC;
+
+-- Get a specific question/answer pair by ID
+getById:
+SELECT *
+FROM QuestionAnswer
+WHERE id = :id;
+
+-- Get all favorited question/answer pairs
+getFavorites:
+SELECT *
+FROM QuestionAnswer
+WHERE favorited = 1
+ORDER BY createdAt DESC;
+
+-- Search question/answer pairs
+searchQuestionAnswers:
+SELECT *
+FROM QuestionAnswer
+WHERE question LIKE '%' || :query || '%' OR answer LIKE '%' || :query || '%'
+ORDER BY createdAt DESC;
+
+-- Insert a new question/answer pair
+insert:
+INSERT INTO QuestionAnswer(id, question, answer, imageData, createdAt, favorited)
+VALUES (?, ?, ?, ?, ?, ?);
+
+-- Update an existing question/answer pair
+update:
+UPDATE QuestionAnswer
+SET question = ?, answer = ?, imageData = ?, favorited = ?
+WHERE id = ?;
+
+-- Delete a question/answer pair
+delete:
+DELETE FROM QuestionAnswer
+WHERE id = ?;
+
+-- Toggle favorite status
+toggleFavorite:
+UPDATE QuestionAnswer
+SET favorited = CASE WHEN favorited = 0 THEN 1 ELSE 0 END
+WHERE id = ?; 
